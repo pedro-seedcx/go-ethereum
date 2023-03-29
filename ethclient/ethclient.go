@@ -24,6 +24,8 @@ import (
 	"fmt"
 	"math/big"
 
+	log "github.com/sirupsen/logrus"
+
 	"github.com/ethereum/go-ethereum"
 	"github.com/ethereum/go-ethereum/common"
 	"github.com/ethereum/go-ethereum/common/hexutil"
@@ -109,6 +111,7 @@ type rpcBlock struct {
 
 func (ec *Client) getBlock(ctx context.Context, method string, args ...interface{}) (*types.Block, error) {
 	var raw json.RawMessage
+	log.Info("AAAAAA")
 	err := ec.c.CallContext(ctx, &raw, method, args...)
 	if err != nil {
 		return nil, err
@@ -124,6 +127,7 @@ func (ec *Client) getBlock(ctx context.Context, method string, args ...interface
 	if err := json.Unmarshal(raw, &body); err != nil {
 		return nil, err
 	}
+	log.Info("BBBBB")
 	// Quick-verify transaction and uncle lists. This mostly helps with debugging the server.
 	if head.UncleHash == types.EmptyUncleHash && len(body.UncleHashes) > 0 {
 		return nil, fmt.Errorf("server returned non-empty uncle list but block header indicates no uncles")
@@ -137,6 +141,7 @@ func (ec *Client) getBlock(ctx context.Context, method string, args ...interface
 	if head.TxHash != types.EmptyRootHash && len(body.Transactions) == 0 {
 		return nil, fmt.Errorf("server returned empty transaction list but block header indicates transactions")
 	}
+	log.Info("CCCC")
 	// Load uncles because they are not included in the block response.
 	var uncles []*types.Header
 	if len(body.UncleHashes) > 0 {
@@ -161,6 +166,7 @@ func (ec *Client) getBlock(ctx context.Context, method string, args ...interface
 			}
 		}
 	}
+	log.Info("DDDDD")
 	// Fill the sender cache of transactions in the block.
 	txs := make([]*types.Transaction, len(body.Transactions))
 	for i, tx := range body.Transactions {
@@ -169,6 +175,7 @@ func (ec *Client) getBlock(ctx context.Context, method string, args ...interface
 		}
 		txs[i] = tx.tx
 	}
+	log.Info("EEEEEEE")
 	return types.NewBlockWithHeader(head).WithBody(txs, uncles), nil
 }
 
