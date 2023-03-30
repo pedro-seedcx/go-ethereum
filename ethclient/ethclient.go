@@ -108,6 +108,32 @@ type rpcBlock struct {
 	Withdrawals  []*types.Withdrawal `json:"withdrawals,omitempty"`
 }
 
+type rpcBlockJSON struct {
+	Hash         common.Hash         `json:"hash"`
+	Transactions []rpcTransaction    `json:"transactions"`
+	UncleHashes  []common.Hash       `json:"uncles"`
+	Withdrawals  []*types.Withdrawal `json:"withdrawals,omitempty"`
+}
+
+func (block *rpcBlock) UnmarshalJSON(msg []byte) error {
+	var dec rpcBlockJSON
+	if err := json.Unmarshal(msg, &dec); err != nil {
+		return err
+	}
+
+	block.Hash = dec.Hash
+	block.UncleHashes = dec.UncleHashes
+	block.Withdrawals = dec.Withdrawals
+	block.Transactions = []rpcTransaction{}
+	for _, tx := range dec.Transactions {
+		if tx.tx.Type() != 100 {
+			block.Transactions = append(block.Transactions, tx)
+		}
+	}
+
+	return nil
+}
+
 func (ec *Client) getBlock(ctx context.Context, method string, args ...interface{}) (*types.Block, error) {
 	var raw json.RawMessage
 	err := ec.c.CallContext(ctx, &raw, method, args...)
